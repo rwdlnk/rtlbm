@@ -1,0 +1,4 @@
+cases/
+*.tgz
+__pycache__/
+*.pyc
