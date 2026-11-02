@@ -4,8 +4,8 @@ A 2D/3D lattice Boltzmann (LBM) code for the Dalziel (1999) RT problem, built
 as a fourth, independent interface method alongside SOLA-VOF, OpenFOAM MULES
 and OpenFOAM MPLIC in `/media/rod/RT-Simulations/Dalziel_1999`. The defaults
 reproduce that configuration. Output is written in the OpenFOAM case layout,
-so the existing `FractalParameterAI` analyzers (`analyze_rt.py`,
-`analyze_rt_3d.py`) read it unchanged.
+so rtfractal and the legacy `FractalParameterAI` analyzers
+(`analyze_rt.py`, `analyze_rt_3d.py`) read it unchanged.
 
 ## Model
 
@@ -52,9 +52,9 @@ python run_rt.py --nx 160 --ny 200 --nz 80 --no-velocity --fields-every 5 --out 
 # resume after an interruption (checkpoint.npz is written every 10 outputs)
 python run_rt.py ... --restart cases/2D/.../checkpoint.npz
 
-# analyse with the existing pipeline
-python /media/rod/ResearchIII/githubRepos/FractalParameterAI/rt_analyzer/analyze_rt.py    cases/2D/M0.002/640x800
-python /media/rod/ResearchIII/githubRepos/FractalParameterAI/rt_analyzer/analyze_rt_3d.py cases/3D/160x200x80
+# analyse with rtfractal (replaces FractalParameterAI)
+rtfractal analyze cases/2D/M0.002/640x800
+rtfractal analyze cases/3D/160x200x80
 
 # side-by-side with SVOF/MULES/MPLIC
 python compare_codes.py cases/2D/M0.002
@@ -105,7 +105,10 @@ gap closes slowly as W·dx → 0. The result does not depend on dt (u_lat
 
 ### 2. Dalziel multimode, cross-code (2D, M = 0.002)
 Late-time fractal dimension D (mean over τ > 2) and h₁₀ at τ = 3, from
-`analyze_rt.py` phase 1. Columns are D / h₁₀.
+`analyze_rt.py` phase 1. Columns are D / h₁₀. These D use the legacy box
+counting, which is biased high by about 0.05–0.13 (see rtfractal's "Known
+issues"); they compare codes on an equal footing, but they aren't absolute
+values. With rtfractal's defaults, LBM 160×200 gives 1.475, not 1.648.
 
 | grid | LBM | SVOF | MULES | MPLIC |
 |---|---|---|---|---|
