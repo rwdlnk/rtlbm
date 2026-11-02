@@ -16,7 +16,7 @@ so the existing `FractalParameterAI` analyzers (`analyze_rt.py`,
 | Interface | conservative Allen–Cahn phase field, D2Q5 / D3Q7, **no surface tension** | mass-conserving and handles topology changes; the analogue of an immiscible, zero-surface-tension VOF |
 | Viscosity | ν(φ) blended between 1.044e-6 (heavy) and 1.005e-6 (light) | same values as the OpenFOAM `physicalProperties.*` |
 | Walls | bottom no-slip (half-way bounce-back), top/sides slip (specular) | same as the OpenFOAM `0/U` |
-| Initial condition | `perturbDalziel.py` recipe: modes 4–8 dx, σ = 0.08 dx, uniform amplitudes, random phases (seed 123), 5 mm tanh, η(x) only (also in 3D) | identical statistics to the OpenFOAM runs |
+| Initial condition | `perturbDalziel.py` recipe: modes 4–8 dx, σ = 0.08 dx, uniform amplitudes, random phases (seed 123), 5 mm tanh; η(x) in 2D, η(x,z) in 3D (m and n each in the 4–8 dx band, one phase draw) | identical to the OpenFOAM Dalziel_1999 runs: η measured at their first output correlates 1.0000 with the recipe (all but MULES 2D 160/320, an earlier script). 3D runs before 2026-11-02 used η(x) copied through z (`--perturbation dalziel-x`); the `-xz` cases replace them |
 | Hydrostatics | density initialised in hydrostatic balance | avoids a start-up acoustic pulse |
 | LES | optional Smagorinsky (`--c-smag`), **off by default** | an SGS model changes small-scale structure, and so D |
 
@@ -120,16 +120,29 @@ MPLIC. h₁₀ at a single instant scatters between codes at the finest grids
 (0.022–0.045). Compare whole h₁₀(τ) curves, not single points.
 
 ### 3. Dalziel multimode, 3D (160×200×80, M = 0.002)
-Run with `analyze_rt_3d.py` phase 1 (interface isosurface box counting).
-The run took 75 s of GPU compute at 680 MLUPS, and the phase-field mass error
-was 3e-7.
+The 3D runs before 2026-11-02 started from η(x) copied through z, so they
+stayed nearly 2D until t ≈ 10. Those results (D₃D = 2.688 legacy, 2.592
+with rtfractal defaults) are void. The corrected runs are
+`cases/3D/*-M0.002-xz`. They start from the OpenFOAM η(x,z) recipe; see
+`rtlbm/initial.py`.
 
-| | LBM | MULES | MPLIC |
+rtfractal defaults (covering offsets, L/8 ladder), over the same τ window as
+OpenFOAM (2.03–4.06, t = 10–20):
+
+| | LBM (η(x,z)) | MULES | MPLIC |
 |---|---|---|---|
-| D₃D (τ > 2) | 2.688 | 2.667 | 2.764 |
-| D₂D + 1 (same grid) | 2.648 | 2.705 | 2.790 |
+| mean D₃D | 2.373 | 2.464 | 2.575 |
+| h_total_int at t = 10 / 20 [m] | 0.020 / 0.089 | 0.051 / 0.122 | 0.056 / 0.134 |
 
-Marstrand's +1 rule holds for the LBM to within 1.5%.
+**The LBM damps the 3D initial perturbation.** The column-integrated η RMS
+falls to 0.45σ by t = 0.2 and 0.32σ by t = 1. OpenFOAM grows it to 1.07σ and
+3.2σ over the same times. Growth starts about 2–3 s late, so the mixing zone
+and D lag throughout. The cause is the Allen–Cahn relaxation, which damps a
+mode at a rate of about M_phys·k². The 3D band includes diagonal modes with
+λ ≈ 2.8–5.7 dx. At 160×200×80, M_phys·k² ≈ 10 s⁻¹ for the shortest modes,
+which is faster than their RT growth rate √(Agk) ≈ 4 s⁻¹. In 2D the band
+is 4–8 dx and the damping is milder: η(x) fell to 0.7σ by t = 0.2. Lower M
+reduces the damping and increases φ overshoot (see Knobs).
 
 ## Knobs that matter (and what to study)
 
