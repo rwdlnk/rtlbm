@@ -63,7 +63,10 @@ class RTSimulation:
         # ---- initial interface
         xc = (np.arange(nx) + 0.5) * self.dx
         yc = (np.arange(ny) + 0.5) * self.dx
-        if perturbation == 'dalziel':
+        if perturbation == 'dalziel' and self.dim == 3:
+            zc = (np.arange(nz) + 0.5) * self.dx
+            eta, self.ic_info = initial.dalziel_eta_xz(xc, zc, Lx, self.Lz, self.dx, self.dx, sigma_frac, seed)
+        elif perturbation in ('dalziel', 'dalziel-x'):
             eta, self.ic_info = initial.dalziel_eta(xc, Lx, self.dx, sigma_frac, seed)
         elif perturbation == 'single':
             eta, self.ic_info = initial.single_mode_eta(xc, Lx, amplitude, mode)
@@ -71,8 +74,8 @@ class RTSimulation:
             raise ValueError(perturbation)
         width = init_width if init_width else W * self.dx
         self.init_width = width
-        phi2 = initial.phi_from_eta(eta, yc, y0, width)
-        phi0 = np.repeat(phi2[None], nz, axis=0)
+        phi = initial.phi_from_eta(eta, yc, y0, width)
+        phi0 = phi if phi.ndim == 3 else np.repeat(phi[None], nz, axis=0)
         self._init_fields(phi0)
         self.kern = build_kernels(self.lat_f, self.lat_h, self.bc, self.dtype, backend)
         self.step_count = 0
