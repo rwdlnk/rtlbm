@@ -13,6 +13,9 @@ dalziel_eta_xz() (3D): the March 3D script, which is not the copy now in the
     eta(x,z) = sum_{m,n} A cos(2 pi m x/Lx + 2 pi n z/Lz + phi_mn) with m and n
     each in their own 4dx..8dx band (m outer loop, one phase draw), only
     n > 0, A = sigma*sqrt(2/N).  Matches all OpenFOAM-3D runs checked.
+    This is NOT the Atwood-study (paper 2) 3D rule, which takes all (m, n) with
+    |lambda| = 1/sqrt((m/Lx)^2 + (n/Lz)^2) in the band (946 vs 231 modes at
+    160x200x80).  rtlbm follows the Dalziel_1999 runs it is compared with.
 In 3D, perturbation='dalziel-x' gives the old rtlbm behaviour (eta(x)
 copied through z), kept only to reproduce runs made before 2026-11-02.
 """
