@@ -37,9 +37,10 @@ def main():
                    help='lattice velocity of u_ref = sqrt(A g Ly); sets dt (Mach number)')
     p.add_argument('--init-width', type=float, default=0.005,
                    help='initial tanh width [m] (0.005 = OpenFOAM perturbDalziel.py; 0 = W*dx)')
-    p.add_argument('--perturbation', choices=['dalziel', 'dalziel-x', 'single'], default='dalziel',
-                   help="dalziel: OpenFOAM Dalziel_1999 recipe, eta(x) in 2D and eta(x,z) in 3D; "
-                        "dalziel-x: eta(x) copied through z (rtlbm 3D runs before 2026-11-02)")
+    p.add_argument('--perturbation', choices=['dalziel', 'dalziel-of', 'dalziel-x', 'single'], default='dalziel',
+                   help="dalziel: 2D = the OpenFOAM Dalziel_1999 eta(x); 3D = wall-compatible eta(x,z) with the "
+                        "OpenFOAM spectral band. dalziel-of: the exact OpenFOAM 3D seed (gives spurious wall "
+                        "plumes in the LBM). dalziel-x: eta(x) copied through z (3D runs before 2026-11-02)")
     p.add_argument('--seed', type=int, default=123)
     p.add_argument('--sigma-frac', type=float, default=0.08)
     p.add_argument('--amplitude', type=float, default=None, help='single-mode amplitude [m]')

@@ -16,8 +16,12 @@ dalziel_eta_xz() (3D): the March 3D script, which is not the copy now in the
     This is NOT the Atwood-study (paper 2) 3D rule, which takes all (m, n) with
     |lambda| = 1/sqrt((m/Lx)^2 + (n/Lz)^2) in the band (946 vs 231 modes at
     160x200x80).  rtlbm follows the Dalziel_1999 runs it is compared with.
-In 3D, perturbation='dalziel-x' gives the old rtlbm behaviour (eta(x)
-copied through z), kept only to reproduce runs made before 2026-11-02.
+dalziel_eta_wall() (3D default): same spectral support as dalziel_eta_xz but
+    built from cos(pi m x/Lx) cos(pi n z/Lz) modes, which meet the slip walls
+    flat.  The exact OpenFOAM seed ('dalziel-of') produces spurious wall
+    plumes in the LBM; see the function docstring.
+In 3D, perturbation='dalziel-of' gives the exact OpenFOAM seed and
+'dalziel-x' the original rtlbm behaviour (eta(x) copied through z).
 """
 import numpy as np
 
@@ -51,6 +55,35 @@ def dalziel_eta_xz(x, z, Lx, Lz, dx, dz, sigma_frac=0.08, seed=123):
     for i, (m, n) in enumerate(pairs):
         eta += amp * np.cos(2 * np.pi * m / Lx * X + 2 * np.pi * n / Lz * Z + phases[i])
     info = dict(m_range=(ms.start, ms.stop - 1), n_range=(ns.start, ns.stop - 1),
+                n_modes=len(pairs), sigma=sigma)
+    return eta, info
+
+
+def dalziel_eta_wall(x, z, Lx, Lz, dx, dz, sigma_frac=0.08, seed=123):
+    """Wall-compatible 3D Dalziel seed (rtlbm 3D default since 2026-11-02).
+
+    eta = sum_{m,n} s_mn A cos(pi m x/Lx) cos(pi n z/Lz), s_mn = +-1 from
+    np.random.seed(seed), A = 2 sigma/sqrt(N), so RMS = sigma = 0.08 dx.
+    Each mode has x and z wavelengths 2Lx/m and 2Lz/n in 4dx..8dx, the same
+    spectral support as dalziel_eta_xz (the OpenFOAM runs), but every mode
+    has zero normal slope at the side walls.  The OpenFOAM seed meets the slip
+    walls at an angle; the mirror makes a crease there, and the Allen-Cahn
+    curvature term moves it, which seeded spurious wall and corner plumes
+    (wall displacement 4.6x, corners 25x the interior at t = 2).
+    """
+    sigma = sigma_frac * dx
+    ms = range(int(np.ceil(Lx / (4 * dx))), int(np.floor(Lx / (2 * dx))) + 1)
+    ns = range(int(np.ceil(Lz / (4 * dz))), int(np.floor(Lz / (2 * dz))) + 1)
+    pairs = [(m, n) for m in ms for n in ns]
+    np.random.seed(seed)
+    signs = np.where(np.random.uniform(size=len(pairs)) < 0.5, -1.0, 1.0)
+    amp = 2.0 * sigma / np.sqrt(len(pairs))
+    cx = {m: np.cos(np.pi * m * x / Lx) for m in ms}
+    cz = {n: np.cos(np.pi * n * z / Lz) for n in ns}
+    eta = np.zeros((len(z), len(x)))
+    for i, (m, n) in enumerate(pairs):
+        eta += signs[i] * amp * np.outer(cz[n], cx[m])
+    info = dict(kind='wall-compatible', m_range=(ms.start, ms.stop - 1), n_range=(ns.start, ns.stop - 1),
                 n_modes=len(pairs), sigma=sigma)
     return eta, info
 

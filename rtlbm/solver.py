@@ -63,9 +63,10 @@ class RTSimulation:
         # ---- initial interface
         xc = (np.arange(nx) + 0.5) * self.dx
         yc = (np.arange(ny) + 0.5) * self.dx
-        if perturbation == 'dalziel' and self.dim == 3:
+        if perturbation in ('dalziel', 'dalziel-of') and self.dim == 3:
             zc = (np.arange(nz) + 0.5) * self.dx
-            eta, self.ic_info = initial.dalziel_eta_xz(xc, zc, Lx, self.Lz, self.dx, self.dx, sigma_frac, seed)
+            recipe = initial.dalziel_eta_wall if perturbation == 'dalziel' else initial.dalziel_eta_xz
+            eta, self.ic_info = recipe(xc, zc, Lx, self.Lz, self.dx, self.dx, sigma_frac, seed)
         elif perturbation in ('dalziel', 'dalziel-x'):
             eta, self.ic_info = initial.dalziel_eta(xc, Lx, self.dx, sigma_frac, seed)
         elif perturbation == 'single':
