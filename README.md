@@ -129,10 +129,12 @@ with rtfractal defaults) are void. The corrected runs are
 rtfractal defaults (covering offsets, L/8 ladder), over the same τ window as
 OpenFOAM (2.03–4.06, t = 10–20):
 
-| | LBM (η(x,z)) | MULES | MPLIC |
-|---|---|---|---|
-| mean D₃D | 2.373 | 2.464 | 2.575 |
-| h_total_int at t = 10 / 20 [m] | 0.020 / 0.089 | 0.051 / 0.122 | 0.056 / 0.134 |
+| | LBM M = 0.002 | LBM M = 0.0005 | MULES | MPLIC |
+|---|---|---|---|---|
+| mean D₃D | 2.373 | 2.432 | 2.464 | 2.575 |
+| h_total_int at t = 10 / 20 [m] | 0.020 / 0.089 | 0.028 / 0.104 | 0.051 / 0.122 | 0.056 / 0.134 |
+| η RMS/σ at t = 0.2 / 1 / 2 | 0.45 / 0.32 / 0.73 | 0.70 / 0.81 / 1.84 | 1.07 / 3.2 / 15 | 1.07 / 3.2 / 15 |
+| φ range over the run | [−0.06, 1.07] | [−0.32, 1.33] | | |
 
 **The LBM damps the 3D initial perturbation.** The column-integrated η RMS
 falls to 0.45σ by t = 0.2 and 0.32σ by t = 1. OpenFOAM grows it to 1.07σ and
@@ -141,8 +143,18 @@ and D lag throughout. The cause is the Allen–Cahn relaxation, which damps a
 mode at a rate of about M_phys·k². The 3D band includes diagonal modes with
 λ ≈ 2.8–5.7 dx. At 160×200×80, M_phys·k² ≈ 10 s⁻¹ for the shortest modes,
 which is faster than their RT growth rate √(Agk) ≈ 4 s⁻¹. In 2D the band
-is 4–8 dx and the damping is milder: η(x) fell to 0.7σ by t = 0.2. Lower M
-reduces the damping and increases φ overshoot (see Knobs).
+is 4–8 dx and the damping is milder: η(x) fell to 0.7σ by t = 0.2.
+
+Lowering M to 0.0005 reduces the damping only partly. The seed still loses
+30% by t = 0.2, and the mixing zone still lags by about 2 s. Meanwhile φ
+overshoot grows to 33%, which corrupts α-weighted quantities such as
+h_total_int. So M = 0.002 stays the default.
+
+The damping is a resolution limit, not a tuning problem. The 3D seed's
+shortest modes (about 2.8 dx) are close to the 3-cell interface width. On
+a finer grid, M_phys·k² grows as 1/dx while √(Agk) grows only as dx^-1/2,
+so refinement does not cure it. Compare LBM 3D with OpenFOAM at matched
+mixing width, not matched t.
 
 ## Knobs that matter (and what to study)
 
