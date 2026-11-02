@@ -61,7 +61,21 @@ python compare_codes.py cases/2D/M0.002
 
 # linear-growth validation
 python validate_linear.py
+
+# view in ParaView (writes CASE/paraview/; open fields.pvd, and interface.pvd in 3D)
+python -m rtlbm.to_paraview cases/3D/80x100x40-M0.002 [--every N]
 ```
+
+**ParaView.** The case's `constant/polyMesh` is a stub that holds only the
+grid coordinates the analyzers read. ParaView's OpenFOAM reader, including
+a `.foam` file, can't open it. `rtlbm.to_paraview` writes binary VTK instead:
+- `fields_<t>.vti`: alpha.water and U as cell data, float32;
+- `interface_<t>.vtp`: copies of the solver's interface isosurfaces;
+- `.pvd` time series for both.
+
+It skips files that already exist; `--force` rewrites them. Output size is
+about 16 bytes per cell per time with U, so `--every N` helps on big grids.
+In ParaView, show `fields.pvd` as Surface (2D) or Slice/Contour (3D).
 
 Each case directory also gets `lbm_params.json` (all lattice and physical
 parameters) and `lbm_diagnostics.csv` (mass error, peak velocity, lattice
@@ -142,6 +156,7 @@ rtlbm/lattices.py   velocity sets
 rtlbm/kernels.py    single-source CPU/GPU kernels (all the physics)
 rtlbm/initial.py    Dalziel and single-mode perturbations
 rtlbm/foamio.py     OpenFOAM-layout writers, 3D interface isosurface VTK
+rtlbm/to_paraview.py  ParaView export (.vti/.vtp + .pvd time series)
 rtlbm/solver.py     setup, hydrostatic init, time loop, output, checkpoints
 run_rt.py           command-line driver
 validate_linear.py  linear-growth validation
