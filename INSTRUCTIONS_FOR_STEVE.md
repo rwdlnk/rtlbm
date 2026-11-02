@@ -16,8 +16,9 @@ You should have two tarballs:
   `--legacy` reproduces the old numbers exactly, for comparison.
 - **The old solver had the wrong 3D initial condition.** It copied the 2D
   perturbation η(x) through z, so 3D runs stayed nearly 2D until t ≈ 10.
-  The 3D seed is now η(x,z), identical to our OpenFOAM Dalziel runs. 2D is
-  unchanged. Re-run any 3D case.
+  The 3D seed now varies in x and z. It has the same spectral band and
+  amplitude as our OpenFOAM Dalziel runs, built from modes that meet the
+  slip side walls flat (see below). 2D is unchanged. Re-run any 3D case.
 
 Everything below was tested on 2026-11-02 in an empty folder with a fresh
 Python 3.12 virtual environment on Linux, GPU (RTX 3060). The test
@@ -76,7 +77,12 @@ OpenFOAM: 0.4 × 0.5 m (× 0.2 m in 3D), A = 0.0021, t = 0–20 s, output every
 - modes with wavelengths 4–8 dx;
 - σ = 0.08 dx, random phases, seed 123;
 - a 5 mm tanh interface;
-- η(x) in 2D, and η(x,z) in 3D with m and n each in the band.
+- η(x) in 2D, identical to the OpenFOAM runs;
+- in 3D, η(x,z) built from cos(πmx/Lx)·cos(πnz/Lz) modes with x and z
+  wavelengths each in the band. The exact OpenFOAM 3D seed meets the slip
+  walls at an angle, and the LBM phase field turns that into spurious
+  plumes along the walls. `--perturbation dalziel-of` still gives the
+  exact seed, for comparison.
 
 ```bash
 cd ~/rt/LatticeBoltzmann
@@ -109,8 +115,9 @@ Useful options (`python run_rt.py -h` lists them all):
 
 **A known LBM limitation in 3D** (README, "Validation" §3). The phase field
 damps the shortest 3D seed modes, at about 2.8 dx. 3D LBM growth therefore
-starts 2–3 s later than in OpenFOAM, and the mixing zone and D lag
-throughout. Compare 3D LBM with other codes at matched mixing width, not
+starts about 3 s later than in OpenFOAM, and the mixing zone lags
+throughout. The late-time D (2.57 at 160×200×80) falls within the
+OpenFOAM range. Compare 3D LBM with other codes at matched mixing width, not
 matched time. 2D is much less affected.
 
 ## 5. Analyse

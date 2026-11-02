@@ -16,7 +16,7 @@ so rtfractal and the legacy `FractalParameterAI` analyzers
 | Interface | conservative Allen–Cahn phase field, D2Q5 / D3Q7, **no surface tension** | mass-conserving and handles topology changes; the analogue of an immiscible, zero-surface-tension VOF |
 | Viscosity | ν(φ) blended between 1.044e-6 (heavy) and 1.005e-6 (light) | same values as the OpenFOAM `physicalProperties.*` |
 | Walls | bottom no-slip (half-way bounce-back), top/sides slip (specular) | same as the OpenFOAM `0/U` |
-| Initial condition | `perturbDalziel.py` recipe: modes 4–8 dx, σ = 0.08 dx, uniform amplitudes, random phases (seed 123), 5 mm tanh; η(x) in 2D, η(x,z) in 3D (m and n each in the 4–8 dx band, one phase draw) | identical to the OpenFOAM Dalziel_1999 runs: η measured at their first output correlates 1.0000 with the recipe (all but MULES 2D 160/320, an earlier script). 3D runs before 2026-11-02 used η(x) copied through z (`--perturbation dalziel-x`); the `-xz` cases replace them. Two different 3D rules exist. Paper 1 (Dalziel_1999 tree) used the separable rule: m and n each in the band, 231 modes at 160×200×80. Paper 2 (Atwood-study tree) used an annulus: |λ| in the band, 946 modes. rtlbm implements the separable rule because it is compared with the Dalziel_1999 runs; nothing in a case name tells the two apart |
+| Initial condition | `perturbDalziel.py` band: modes 4–8 dx, σ = 0.08 dx, seed 123, 5 mm tanh. 2D: the OpenFOAM η(x) exactly (uniform amplitudes, random phases). 3D (default): wall-compatible η(x,z) = Σ ±A cos(πmx/Lx) cos(πnz/Lz), with x and z wavelengths each in the band | 2D is identical to the OpenFOAM Dalziel_1999 runs: η measured at their first output correlates 1.0000 with the recipe (all but MULES 2D 160/320, an earlier script). The exact OpenFOAM 3D seed (`--perturbation dalziel-of`; separable rule, m and n each in the band, 231 modes at 160×200×80) causes spurious wall plumes in the LBM (Validation §3), so 3D uses the same spectral support with modes that meet the slip walls flat. The Atwood-study (paper 2) runs used a third rule, an annulus |λ| in the band (946 modes). `--perturbation dalziel-x` reproduces 3D runs from before 2026-11-02 (η(x) copied through z) |
 | Hydrostatics | density initialised in hydrostatic balance | avoids a start-up acoustic pulse |
 | LES | optional Smagorinsky (`--c-smag`), **off by default** | an SGS model changes small-scale structure, and so D |
 
@@ -123,41 +123,60 @@ MPLIC. h₁₀ at a single instant scatters between codes at the finest grids
 (0.022–0.045). Compare whole h₁₀(τ) curves, not single points.
 
 ### 3. Dalziel multimode, 3D (160×200×80, M = 0.002)
-The 3D runs before 2026-11-02 started from η(x) copied through z, so they
-stayed nearly 2D until t ≈ 10. Those results (D₃D = 2.688 legacy, 2.592
-with rtfractal defaults) are void. The corrected runs are
-`cases/3D/*-M0.002-xz`. They start from the OpenFOAM η(x,z) recipe; see
-`rtlbm/initial.py`.
+**Seed history:**
+- **Before 2026-11-02:** η(x) copied through z (`dalziel-x`). The flow stayed
+  nearly 2D until t ≈ 10, so those results are void (D₃D = 2.688 legacy,
+  2.592 with rtfractal defaults).
+- **The exact OpenFOAM seed** (`dalziel-of`, the `-xz` cases). It produces
+  spurious wall plumes: see below.
+- **Current default: the wall-compatible seed** (the `-wc` cases). It has
+  the OpenFOAM spectral band and RMS, but uses cos·cos modes that meet the
+  slip walls flat.
 
 rtfractal defaults (covering offsets, L/8 ladder), over the same τ window as
 OpenFOAM (2.03–4.06, t = 10–20):
 
-| | LBM M = 0.002 | LBM M = 0.0005 | MULES | MPLIC |
+| | LBM, wall-compatible | LBM, OpenFOAM seed | MULES | MPLIC |
 |---|---|---|---|---|
-| mean D₃D | 2.373 | 2.432 | 2.464 | 2.575 |
-| h_total_int at t = 10 / 20 [m] | 0.020 / 0.089 | 0.028 / 0.104 | 0.051 / 0.122 | 0.056 / 0.134 |
-| η RMS/σ at t = 0.2 / 1 / 2 | 0.45 / 0.32 / 0.73 | 0.70 / 0.81 / 1.84 | 1.07 / 3.2 / 15 | 1.07 / 3.2 / 15 |
-| φ range over the run | [−0.06, 1.07] | [−0.32, 1.33] | | |
+| mean D₃D | 2.570 | 2.373 | 2.464 | 2.575 |
+| h_total_int at t = 10 / 20 [m] | 0.016 / 0.069 | 0.020 / 0.089 | 0.051 / 0.122 | 0.056 / 0.134 |
+| η RMS/σ at t = 0.2 / 1 / 2 | 0.44 / 0.26 / 0.42 | 0.45 / 0.32 / 0.73 | 1.07 / 3.2 / 15 | 1.07 / 3.2 / 15 |
+| wall / corner \|η\| ÷ interior RMS, t = 2 | 0.99 / 0.89 | 4.6 / 25 | 0.97 / 1.7 | 0.99 / 1.8 |
 
-**The LBM damps the 3D initial perturbation.** The column-integrated η RMS
-falls to 0.45σ by t = 0.2 and 0.32σ by t = 1. OpenFOAM grows it to 1.07σ and
-3.2σ over the same times. Growth starts about 2–3 s late, so the mixing zone
-and D lag throughout. The cause is the Allen–Cahn relaxation, which damps a
-mode at a rate of about M_phys·k². The 3D band includes diagonal modes with
-λ ≈ 2.8–5.7 dx. At 160×200×80, M_phys·k² ≈ 10 s⁻¹ for the shortest modes,
-which is faster than their RT growth rate √(Agk) ≈ 4 s⁻¹. In 2D the band
-is 4–8 dx and the damping is milder: η(x) fell to 0.7σ by t = 0.2.
+80×100×40 with the wall-compatible seed: mean D₃D = 2.559.
 
-Lowering M to 0.0005 reduces the damping only partly. The seed still loses
-30% by t = 0.2, and the mixing zone still lags by about 2 s. Meanwhile φ
-overshoot grows to 33%, which corrupts α-weighted quantities such as
-h_total_int. So M = 0.002 stays the default.
+**Wall plumes with the exact OpenFOAM seed.** The OpenFOAM seed meets the slip
+side walls at an angle. Under the mirror boundary the interface has a crease
+along each wall, sharper at the vertical corners. The Allen–Cahn curvature
+term moves that crease at a rate set by M. That seeds plumes that run up and
+down the side walls: by t = 2 the wall displacement is 4.6× the interior RMS
+and the corner displacement 25×. By t = 6 the wall |U| is 2–5× the interior
+value. The effect weakens with M (2.6× and 8.7× at M = 0.0005). It is absent
+with a flat interface and absent with the wall-compatible seed. OpenFOAM's
+VOF has no curvature term, so the same seed is harmless there.
 
-The damping is a resolution limit, not a tuning problem. The 3D seed's
-shortest modes (about 2.8 dx) are close to the 3-cell interface width. On
-a finer grid, M_phys·k² grows as 1/dx while √(Agk) grows only as dx^-1/2,
-so refinement does not cure it. Compare LBM 3D with OpenFOAM at matched
-mixing width, not matched t.
+**The LBM damps the 3D initial perturbation,** whichever seed is used. The
+column-integrated η RMS falls to about 0.45σ by t = 0.2 and 0.3σ by t = 1.
+OpenFOAM grows it to 1.07σ and 3.2σ over the same times. Growth starts
+about 3 s late, so the mixing zone lags throughout: about a third of
+OpenFOAM's width at t = 10. The cause is again the Allen–Cahn relaxation,
+which damps a mode at a rate of about M_phys·k². The 3D band includes
+diagonal modes with λ ≈ 2.8–5.7 dx. At 160×200×80, M_phys·k² ≈ 10 s⁻¹ for
+the shortest modes, which is faster than their RT growth rate
+√(Agk) ≈ 4 s⁻¹. In 2D the band is 4–8 dx and the damping is milder: η(x)
+fell to 0.7σ by t = 0.2.
+
+Lowering M to 0.0005 (tested with the OpenFOAM seed) reduces the damping
+only partly. The seed still loses 30% by t = 0.2, and the mixing zone still
+lags by about 2 s. Meanwhile φ overshoot grows from 6% to 33%
+([−0.32, 1.33]), which corrupts α-weighted quantities such as h_total_int.
+So M = 0.002 stays the default.
+
+The damping is a resolution limit, not a tuning problem. The seed's
+shortest modes are close to the 3-cell interface width. On a finer grid,
+M_phys·k² grows as 1/dx while √(Agk) grows only as dx^-1/2, so refinement
+does not cure it. Compare LBM 3D with OpenFOAM at matched mixing width, not
+matched t.
 
 ## Knobs that matter (and what to study)
 
