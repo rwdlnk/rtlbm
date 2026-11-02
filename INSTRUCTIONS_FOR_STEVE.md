@@ -20,7 +20,9 @@ You should have two tarballs:
   unchanged. Re-run any 3D case.
 
 Everything below was tested on 2026-11-02 in an empty folder with a fresh
-Python virtual environment on Linux.
+Python 3.12 virtual environment on Linux, GPU (RTX 3060). The test
+covered solver validation, LBM runs in 2D (160×200) and 3D (80×100×40), all three
+rtfractal phases in both, `--legacy`, and the ParaView export.
 
 ## 1. Unpack
 
@@ -54,6 +56,8 @@ rtfractal -h
 - If you don't, add `--backend cpu` to every `run_rt.py` and
   `validate_linear.py` command. rtfractal picks the CPU on its own.
   It gives identical numbers either way.
+- On small grids numba prints `NumbaPerformanceWarning: Grid size N will
+  likely result in GPU under-utilization`. It's harmless.
 
 ## 3. Check the solver (about 1 minute on a GPU)
 
