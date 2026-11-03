@@ -1,11 +1,12 @@
 # Getting started: RT lattice Boltzmann solver and fractal analysis
 
-You should have two tarballs:
+There are two packages. You can get them as tarballs or clone them from GitHub
+(section 1):
 
-| File | Contents |
-|---|---|
-| `rtlbm-code.tgz` | `LatticeBoltzmann/`: the LBM Rayleigh–Taylor solver (2D/3D, GPU or CPU) |
-| `rtfractal.tgz` | `rtfractal/`: the fractal and mixing analyzer (2D/3D; LBM, OpenFOAM and SOLA-VOF output) |
+| Tarball | GitHub | Contents |
+|---|---|---|
+| `rtlbm-code.tgz` | `rwdlnk/rtlbm` | `LatticeBoltzmann/`: the LBM Rayleigh–Taylor solver (2D/3D, GPU or CPU) |
+| `rtfractal.tgz` | `rwdlnk/rtfractal` | `rtfractal/`: the fractal and mixing analyzer (2D/3D; LBM, OpenFOAM and SOLA-VOF output) |
 
 **These replace the 2026-10-30 tarballs** (`rtlbm-code.tgz` and
 `fractal-tools.tgz`). If you ran anything with those, two things changed:
@@ -25,14 +26,32 @@ Python 3.12 virtual environment on Linux, GPU (RTX 3060). The test
 covered solver validation, LBM runs in 2D (160×200) and 3D (80×100×40), all three
 rtfractal phases in both, `--legacy`, and the ParaView export.
 
-## 1. Unpack
+## 1. Get the code
 
+**Option A: tarballs**
 ```bash
 mkdir ~/rt && cd ~/rt
 tar xzf rtlbm-code.tgz
 tar xzf rtfractal.tgz
 ls        # LatticeBoltzmann  rtfractal
 ```
+
+**Option B: clone from GitHub.** This makes updates a `git pull` away.
+```bash
+mkdir ~/rt && cd ~/rt
+git clone https://github.com/rwdlnk/rtlbm.git LatticeBoltzmann
+git clone https://github.com/rwdlnk/rtfractal.git
+ls        # LatticeBoltzmann  rtfractal
+```
+- Clone rtlbm into `LatticeBoltzmann` so the paths below work.
+- rtfractal is public. rtlbm is private, so ask Rod to add you as a
+  collaborator first. GitHub then asks for your username and a personal
+  access token, or use the `git@github.com:rwdlnk/rtlbm.git` URL with an SSH
+  key.
+- To update later: `git -C LatticeBoltzmann pull` and `git -C rtfractal pull`.
+  The editable install (`pip install -e`, next step) picks up rtfractal
+  changes without reinstalling. `rtfractal_run.json` records the commit
+  each analysis used.
 
 ## 2. Python environment
 
