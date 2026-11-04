@@ -44,10 +44,7 @@ git clone https://github.com/rwdlnk/rtfractal.git
 ls        # LatticeBoltzmann  rtfractal
 ```
 - Clone rtlbm into `LatticeBoltzmann` so the paths below work.
-- rtfractal is public. rtlbm is private, so ask Rod to add you as a
-  collaborator first. GitHub then asks for your username and a personal
-  access token, or use the `git@github.com:rwdlnk/rtlbm.git` URL with an SSH
-  key.
+- Both repos are public, so no GitHub login is needed to clone or pull.
 - To update later: `git -C LatticeBoltzmann pull` and `git -C rtfractal pull`.
   The editable install (`pip install -e`, next step) picks up rtfractal
   changes without reinstalling. `rtfractal_run.json` records the commit
