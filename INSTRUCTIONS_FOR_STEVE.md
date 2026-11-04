@@ -132,9 +132,12 @@ Useful options (`python run_rt.py -h` lists them all):
 **A known LBM limitation in 3D** (README, "Validation" §3). The phase field
 damps the shortest 3D seed modes, at about 2.8 dx. 3D LBM growth therefore
 starts about 3 s later than in OpenFOAM, and the mixing zone lags
-throughout. The late-time D (2.57 at 160×200×80) falls within the
-OpenFOAM range. Compare 3D LBM with other codes at matched mixing width, not
-matched time. 2D is much less affected.
+throughout. Compare 3D LBM with other codes at matched mixing width (for
+example h_total_int), not matched time. At matched width D is too high
+early but sits inside the OpenFOAM range once h_total_int is above about
+0.045 m. At 160×200×80, over h_total_int = 0.045–0.12 m, mean D is 2.53,
+against MULES 2.46 and MPLIC 2.55. README §3 has the table. 2D is much less
+affected.
 
 ## 5. Analyse
 

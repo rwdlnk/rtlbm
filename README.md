@@ -133,17 +133,57 @@ MPLIC. h₁₀ at a single instant scatters between codes at the finest grids
   the OpenFOAM spectral band and RMS, but uses cos·cos modes that meet the
   slip walls flat.
 
-rtfractal defaults (covering offsets, L/8 ladder), over the same τ window as
-OpenFOAM (2.03–4.06, t = 10–20):
+**Early state of the seed, and the time-window means:**
 
 | | LBM, wall-compatible | LBM, OpenFOAM seed | MULES | MPLIC |
 |---|---|---|---|---|
-| mean D₃D | 2.570 | 2.373 | 2.464 | 2.575 |
-| h_total_int at t = 10 / 20 [m] | 0.016 / 0.069 | 0.020 / 0.089 | 0.051 / 0.122 | 0.056 / 0.134 |
 | η RMS/σ at t = 0.2 / 1 / 2 | 0.44 / 0.26 / 0.42 | 0.45 / 0.32 / 0.73 | 1.07 / 3.2 / 15 | 1.07 / 3.2 / 15 |
 | wall / corner \|η\| ÷ interior RMS, t = 2 | 0.99 / 0.89 | 4.6 / 25 | 0.97 / 1.7 | 0.99 / 1.8 |
+| h_total_int at t = 10 / 20 [m] | 0.016 / 0.069 | 0.020 / 0.089 | 0.051 / 0.122 | 0.056 / 0.134 |
+| mean D₃D, t = 10–20 (do not use, see below) | 2.570 | 2.373 | 2.464 | 2.575 |
 
-80×100×40 with the wall-compatible seed: mean D₃D = 2.559.
+All D values use rtfractal defaults (covering offsets, L/8 ladder, R² trim),
+and all codes went through the same rtfractal phase 1.
+
+**Compare at matched mixing width, not matched time.** The LBM starts
+growing about 3.5 s late: D leaves 2 at t ≈ 5.5, against t ≈ 2 in OpenFOAM.
+A fixed time window therefore compares the LBM at an earlier stage of
+growth. The near-equal t = 10–20 means (2.570 vs 2.575) are partly a
+coincidence: the LBM window covers the falling side of its early
+overshoot, while OpenFOAM's covers its later rise. The wall-compatible run
+was extended to t = 30 so that it covers OpenFOAM's full width range.
+
+Mean D₃D, binned by h_total_int (in brackets: the LBM's time range):
+
+| h_total_int [m] | LBM, wall-compatible | LBM, OpenFOAM seed | MULES | MPLIC |
+|---|---|---|---|---|
+| 0.005–0.01 | 2.68 (t 7.6–8.6) | 2.24 | 2.52 | 2.50 |
+| 0.01–0.02 | 2.70 | 2.33 | 2.45 | 2.46 |
+| 0.02–0.03 | 2.64 | 2.33 | 2.42 | 2.48 |
+| 0.03–0.045 | 2.55 | 2.31 | 2.40 | 2.50 |
+| 0.045–0.06 | 2.52 | 2.37 | 2.41 | 2.51 |
+| 0.06–0.08 | 2.50 | 2.43 | 2.45 | 2.53 |
+| 0.08–0.10 | 2.52 | 2.49 | 2.47 | 2.55 |
+| 0.10–0.13 | 2.59 (t 24.4–27.2) | — | 2.50 | 2.61 |
+| **mean, 0.045–0.122** | **2.53** | — | **2.46** | **2.55** |
+
+- **From h ≈ 0.045 m on, the wall-compatible LBM sits inside the OpenFOAM
+  range,** next to MPLIC, and follows OpenFOAM's late rise in D.
+- **Below h ≈ 0.045 m the LBM is too high.** D overshoots to 2.7 at
+  h = 0.01–0.02 m, where OpenFOAM is at 2.45–2.50. A plausible cause, not
+  verified: the wall-compatible seed has 861 modes against the OpenFOAM
+  seed's 231, so the early interface carries different fine-scale content.
+- **With the OpenFOAM seed, the LBM stays 0.1–0.15 below MULES** until
+  h ≈ 0.08 m, then joins it.
+- **The end walls are reached in every code.** The longest plumes reach the
+  top and bottom walls at t ≈ 15–20 in OpenFOAM and t ≈ 20–25 in the LBM
+  (h ≈ 0.07–0.10 m). After that, mean α in the bottom row climbs: 0.34 for
+  MPLIC at t = 20 and 0.31 for the LBM at t = 30. The late rise in D
+  therefore includes end-wall effects in every code.
+- **Beyond OpenFOAM's range:** LBM D at t = 30 is 2.76, at
+  h_total_int = 0.161 m.
+- **Coarse grid:** at 80×100×40 with the wall-compatible seed, mean D₃D
+  over t = 10–20 is 2.559. It has not been binned by width.
 
 **Wall plumes with the exact OpenFOAM seed.** The OpenFOAM seed meets the slip
 side walls at an angle. Under the mirror boundary the interface has a crease
@@ -176,7 +216,20 @@ The damping is a resolution limit, not a tuning problem. The seed's
 shortest modes are close to the 3-cell interface width. On a finer grid,
 M_phys·k² grows as 1/dx while √(Agk) grows only as dx^-1/2, so refinement
 does not cure it. Compare LBM 3D with OpenFOAM at matched mixing width, not
-matched t.
+matched t (table above).
+
+**Other LBM work on RT.** Tavares, Biferale, Sbragaglia & Mailybaev (Phil.
+Trans. R. Soc. A 379:20200396, 2021; Phys. Rev. Fluids 6, 054606, 2021)
+simulate 2D RT turbulence with a two-component Shan–Chen LBM.
+- **Their setup:** a domain periodic in x, a white-noise seed, and a single
+  grid. They validate by linear growth at one wavenumber and by energy-budget
+  closure.
+- **Their method has the same limits ours does.** Their miscible runs have
+  a diffusivity of about 0.002 in lattice units, about our M, so they carry
+  the same k² damping. Their immiscible runs replace it with a surface-tension
+  cutoff.
+- **What they don't cover:** cross-code comparison, spectra, fractal
+  dimensions and 3D.
 
 ## Knobs that matter (and what to study)
 
