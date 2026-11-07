@@ -127,17 +127,19 @@ Useful options (`python run_rt.py -h` lists them all):
 | `--backend cpu` | run on CPU cores instead of the GPU |
 
 **Disk.** Output is ASCII, as in OpenFOAM. A 2D 1280×1600 run takes about
-7 GB, and a 3D 160×200×80 run about 4 GB.
+7 GB. A 3D run to t = 30 without velocity output (`--no-velocity`) takes
+about 7 GB at 160×200×80 and about 54 GB at 320×400×160. The 320 run takes
+about 35 minutes on an RTX 3060 and needs about 5 GB of GPU memory.
 
 **A known LBM limitation in 3D** (README, "Validation" §3). The phase field
 damps the shortest 3D seed modes, at about 2.8 dx. 3D LBM growth therefore
 starts about 3 s later than in OpenFOAM, and the mixing zone lags
 throughout. Compare 3D LBM with other codes at matched mixing width (for
-example h_total_int), not matched time. At matched width D is too high
-early but sits inside the OpenFOAM range once h_total_int is above about
-0.045 m. At 160×200×80, over h_total_int = 0.045–0.12 m, mean D is 2.53,
-against MULES 2.46 and MPLIC 2.55. README §3 has the table. 2D is much less
-affected.
+example h_total_int), not matched time. At 320×400×160 the LBM's D
+tracks MPLIC within about 0.01–0.03 at every matched width. Over
+h_total_int = 0.045–0.075 m the means are LBM 2.629, MPLIC 2.624 and MULES
+2.576. At 160×200×80, D overshoots below h_total_int ≈ 0.045 m; that is a
+coarse-grid effect. README §3 has the tables. 2D is much less affected.
 
 ## 5. Analyse
 

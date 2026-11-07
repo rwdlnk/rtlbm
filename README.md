@@ -122,7 +122,7 @@ range from 320×400 upward. At 1280×1600 its D (1.767) sits between MULES and
 MPLIC. h₁₀ at a single instant scatters between codes at the finest grids
 (0.022–0.045). Compare whole h₁₀(τ) curves, not single points.
 
-### 3. Dalziel multimode, 3D (160×200×80, M = 0.002)
+### 3. Dalziel multimode, 3D (160×200×80 and 320×400×160, M = 0.002)
 **Seed history:**
 - **Before 2026-11-02:** η(x) copied through z (`dalziel-x`). The flow stayed
   nearly 2D until t ≈ 10, so those results are void (D₃D = 2.688 legacy,
@@ -133,7 +133,7 @@ MPLIC. h₁₀ at a single instant scatters between codes at the finest grids
   the OpenFOAM spectral band and RMS, but uses cos·cos modes that meet the
   slip walls flat.
 
-**Early state of the seed, and the time-window means:**
+**Early state of the seed, and the time-window means (160×200×80):**
 
 | | LBM, wall-compatible | LBM, OpenFOAM seed | MULES | MPLIC |
 |---|---|---|---|---|
@@ -153,7 +153,8 @@ coincidence: the LBM window covers the falling side of its early
 overshoot, while OpenFOAM's covers its later rise. The wall-compatible run
 was extended to t = 30 so that it covers OpenFOAM's full width range.
 
-Mean D₃D, binned by h_total_int (in brackets: the LBM's time range):
+Mean D₃D at 160×200×80, binned by h_total_int (in brackets: the LBM's time
+range):
 
 | h_total_int [m] | LBM, wall-compatible | LBM, OpenFOAM seed | MULES | MPLIC |
 |---|---|---|---|---|
@@ -170,9 +171,8 @@ Mean D₃D, binned by h_total_int (in brackets: the LBM's time range):
 - **From h ≈ 0.045 m on, the wall-compatible LBM sits inside the OpenFOAM
   range,** next to MPLIC, and follows OpenFOAM's late rise in D.
 - **Below h ≈ 0.045 m the LBM is too high.** D overshoots to 2.7 at
-  h = 0.01–0.02 m, where OpenFOAM is at 2.45–2.50. A plausible cause, not
-  verified: the wall-compatible seed has 861 modes against the OpenFOAM
-  seed's 231, so the early interface carries different fine-scale content.
+  h = 0.01–0.02 m, where OpenFOAM is at 2.45–2.50. The 320 grid (below)
+  shows that this overshoot is a coarse-grid effect.
 - **With the OpenFOAM seed, the LBM stays 0.1–0.15 below MULES** until
   h ≈ 0.08 m, then joins it.
 - **The end walls are reached in every code.** The longest plumes reach the
@@ -184,6 +184,34 @@ Mean D₃D, binned by h_total_int (in brackets: the LBM's time range):
   h_total_int = 0.161 m.
 - **Coarse grid:** at 80×100×40 with the wall-compatible seed, mean D₃D
   over t = 10–20 is 2.559. It has not been binned by width.
+
+**320×400×160, wall-compatible seed, t = 0–30** (the seed has 3321 modes).
+The OpenFOAM runs at this grid are shorter: MULES ends at t = 20
+(h_total_int 0.102 m) and MPLIC at t = 15 (0.075 m).
+
+| h_total_int [m] | LBM | MULES | MPLIC |
+|---|---|---|---|
+| 0.005–0.01 | 2.48 | 2.50 | 2.50 |
+| 0.01–0.02 | 2.55 | 2.49 | 2.54 |
+| 0.02–0.03 | 2.60 | 2.50 | 2.57 |
+| 0.03–0.045 | 2.62 | 2.54 | 2.60 |
+| 0.045–0.06 | 2.62 | 2.57 | 2.62 |
+| 0.06–0.08 | 2.64 | 2.58 | 2.63 |
+| 0.08–0.10 | 2.65 | 2.59 | — |
+| 0.10–0.13 | 2.70 | 2.60 | — |
+| **mean, 0.045–0.075** | **2.629** | **2.576** | **2.624** |
+
+- **At matched width the LBM tracks MPLIC within about 0.01–0.03 at every
+  width they share.** The 160 overshoot is gone.
+- **All three codes rise by a similar amount from 160 to 320.** Their order
+  holds at both grids: MULES lowest, the LBM and MPLIC together.
+- **The late start remains.** D passes 2.05 at t = 6.2 in the LBM, against
+  1.8–2.0 in OpenFOAM, and the t = 10–20 mean is 2.616 (MULES 2.576, MPLIC
+  2.621 over t = 10–15). At matched width the delay doesn't matter.
+- **Beyond OpenFOAM's range,** the LBM rises to 2.78 at h ≈ 0.15 m, where
+  the end walls are involved.
+- The run took about 35 min on an RTX 3060 (680 MLUPS) and about 54 GB of
+  disk.
 
 **Wall plumes with the exact OpenFOAM seed.** The OpenFOAM seed meets the slip
 side walls at an angle. Under the mirror boundary the interface has a crease
